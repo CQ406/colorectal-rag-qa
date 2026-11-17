@@ -1,0 +1,60 @@
+﻿# ============================================================
+# 结直肠手术围术期多模态知识库智能问答系统 — 后端依赖
+# Python 3.12 / Windows
+# 安装:  D:\deep seek test\rag-venv\Scripts\python.exe -m pip install -r requirements.txt
+# ============================================================
+
+# --- Web 框架 ---
+fastapi>=0.115
+uvicorn[standard]>=0.32
+python-multipart>=0.0.12          # 文件上传（影像/文献）
+
+# --- 配置与校验 ---
+pydantic>=2.9
+pydantic-settings>=2.6
+python-dotenv>=1.0
+
+# --- 数据库 ORM 与迁移 ---
+SQLAlchemy>=2.0.36
+alembic>=1.14
+psycopg[binary]>=3.2               # PostgreSQL 驱动（psycopg3）
+pgvector>=0.3                      # pgvector 的 Python 类型支持
+
+# --- 图数据库 ---
+neo4j>=5.25
+
+# --- 缓存 ---
+redis>=5.2
+
+# --- 对象存储 ---
+minio>=7.2
+
+# --- LangChain LCEL 编排 ---
+langchain-core==1.7.6
+
+# --- HTTP 客户端（调用 LLM / 多模态 API、PubMed） ---
+httpx>=0.28
+
+# --- 文档解析 ---
+pymupdf>=1.24                      # PDF 正文与页码抽取
+pdfplumber>=0.11                   # 表格抽取
+python-docx>=1.1                   # Word 解析
+Pillow>=10.0                       # 影像尺寸与 512 维颜色直方图特征
+
+# --- 后台任务 ---
+celery>=5.4
+
+# --- 认证 ---
+python-jose[cryptography]>=3.3
+passlib[bcrypt]>=1.7
+
+# --- 测试 ---
+pytest>=8.3
+pytest-asyncio>=0.24
+psutil>=7.2                       # Windows 浏览器测试进程身份核验与清理
+
+# ---------- ML 推理依赖（体积大，单独一个文件） ----------
+# 检索与入库依赖 BGE-M3（向量化）与 bge-reranker-v2-m3（重排），
+# 它们跑在 PyTorch 上。torch 的 CUDA wheel 约 2.5 GB，
+# 故拆到 requirements-ml.txt，只做接口开发时可不装：
+#     pip install -r requirements-ml.txt --extra-index-url https://download.pytorch.org/whl/cu128

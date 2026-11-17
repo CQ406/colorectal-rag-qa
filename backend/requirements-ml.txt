@@ -1,0 +1,24 @@
+# ML 推理依赖（BGE-M3 / 交叉编码器重排）
+#
+# 为什么要单独一个文件：torch 的 CUDA wheel 约 2.5 GB，
+# 与主依赖（requirements.txt）装在一起会让纯后端开发环境变得很重。
+# 只跑接口/前端联调时可以不装本文件；要跑检索、入库时必须装。
+#
+# 安装（CUDA 12.8 版）：
+#   pip install -r requirements-ml.txt \
+#       --extra-index-url https://download.pytorch.org/whl/cu128
+#
+# CPU 版把 cu128 换成 cpu，或直接 pip install torch 装默认 CPU wheel。
+
+torch==2.11.0+cu128            # 张量计算与 CUDA 加速；向量化与重排的运行时
+transformers==5.18.0           # 交叉编码器（bge-reranker-v2-m3）加载
+FlagEmbedding==1.4.2           # BGE-M3 官方封装（BGEM3FlagModel）
+sentence-transformers==6.1.0   # CrossEncoder 封装
+huggingface-hub==1.33.0        # 本地模型目录加载 / 离线缓存
+numpy==2.5.2                   # 向量运算；NaN 自愈检测用 isfinite
+
+# 模型文件不放代码仓库（体积大），默认放在：
+#   D:\models\bge-m3            1024 维向量
+#   D:\models\bge-reranker-v2-m3 交叉编码器重排
+# 由 .env 的 EMBEDDING_MODEL_PATH / RERANK_MODEL_PATH 指定。
+# 离线运行时设置 HF_HUB_OFFLINE=1，避免联网检查更新。

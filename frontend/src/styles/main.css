@@ -1,0 +1,279 @@
+/* ============================================================
+   全局样式
+   ============================================================ */
+
+:root {
+  /* 主题色：医疗场景用稳重的蓝绿色系 */
+  --cr-primary: #2b7a78;
+  --cr-primary-light: #3aafa9;
+  --cr-primary-dark: #17252a;
+  --cr-accent: #feffff;
+
+  --cr-bg: #f4f6f8;
+  --cr-surface: #ffffff;
+  --cr-border: #e4e8eb;
+
+  --cr-text: #1f2d3d;
+  --cr-text-secondary: #5a6b7b;
+  --cr-text-muted: #637584;
+
+  /* 证据等级配色 */
+  --cr-evidence-guideline: #c0392b;
+  --cr-evidence-consensus: #d35400;
+  --cr-evidence-systematic: #8e44ad;
+  --cr-evidence-rct: #2980b9;
+  --cr-evidence-cohort: #16a085;
+  --cr-evidence-case: #7f8c8d;
+  --cr-evidence-review: #27ae60;
+  --cr-evidence-other: #95a5a6;
+
+  --cr-radius: 8px;
+  --cr-shadow-sm: 0 1px 3px rgba(31, 45, 61, 0.08);
+  --cr-shadow: 0 2px 12px rgba(31, 45, 61, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Helvetica,
+    'Segoe UI', Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--cr-text);
+  background: var(--cr-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- 滚动条美化 ---------- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c8d1d8;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a9b6c0;
+}
+
+/* ============================================================
+   答案 Markdown 渲染样式
+   ============================================================ */
+.answer-body {
+  color: var(--cr-text);
+  word-break: break-word;
+}
+
+.answer-body h1,
+.answer-body h2,
+.answer-body h3,
+.answer-body h4 {
+  margin: 1.1em 0 0.5em;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--cr-primary-dark);
+}
+
+.answer-body h1 {
+  font-size: 1.25em;
+}
+.answer-body h2 {
+  font-size: 1.15em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--cr-border);
+}
+.answer-body h3 {
+  font-size: 1.05em;
+}
+
+.answer-body p {
+  margin: 0.6em 0;
+}
+
+.answer-body ul,
+.answer-body ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.answer-body li {
+  margin: 0.3em 0;
+}
+
+.answer-body strong {
+  color: var(--cr-primary-dark);
+  font-weight: 600;
+}
+
+.answer-body blockquote {
+  margin: 0.8em 0;
+  padding: 0.5em 1em;
+  border-left: 3px solid var(--cr-primary-light);
+  background: #f0f7f7;
+  color: var(--cr-text-secondary);
+}
+
+.answer-body code {
+  padding: 0.15em 0.4em;
+  font-family: 'Cascadia Code', Consolas, Monaco, monospace;
+  font-size: 0.9em;
+  background: #eef2f5;
+  border-radius: 3px;
+}
+
+.answer-body pre {
+  margin: 0.8em 0;
+  padding: 0.9em 1em;
+  overflow-x: auto;
+  background: #f6f8fa;
+  border: 1px solid var(--cr-border);
+  border-radius: var(--cr-radius);
+}
+
+.answer-body pre code {
+  padding: 0;
+  background: transparent;
+  font-size: 0.88em;
+}
+
+.answer-body table {
+  width: 100%;
+  margin: 0.8em 0;
+  border-collapse: collapse;
+  font-size: 0.94em;
+}
+
+.answer-body th,
+.answer-body td {
+  padding: 0.5em 0.7em;
+  border: 1px solid var(--cr-border);
+  text-align: left;
+}
+
+.answer-body th {
+  background: #f0f4f7;
+  font-weight: 600;
+}
+
+.answer-body hr {
+  margin: 1.2em 0;
+  border: none;
+  border-top: 1px solid var(--cr-border);
+}
+
+.answer-body a {
+  color: var(--cr-primary);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--cr-primary);
+}
+
+.answer-body a:hover {
+  color: var(--cr-primary-light);
+}
+
+/* ============================================================
+   引用标记（可点击上标）
+   ============================================================ */
+.answer-body sup.cite {
+  display: inline-block;
+  min-width: 1.3em;
+  margin: 0 0.15em;
+  padding: 0 0.28em;
+  font-size: 0.72em;
+  font-weight: 600;
+  line-height: 1.5em;
+  color: #fff;
+  text-align: center;
+  vertical-align: super;
+  background: var(--cr-primary);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+  user-select: none;
+}
+
+.answer-body sup.cite:hover {
+  background: var(--cr-primary-light);
+  transform: translateY(-1px);
+}
+
+/* 引用被点击时的高亮闪烁 */
+.answer-body sup.cite.is-active {
+  background: #e67e22;
+}
+
+/* ============================================================
+   通用工具类
+   ============================================================ */
+.text-muted {
+  color: var(--cr-text-muted);
+}
+
+.text-secondary {
+  color: var(--cr-text-secondary);
+}
+
+.mono {
+  font-family: 'Cascadia Code', Consolas, Monaco, monospace;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 流式生成时的光标 */
+.stream-cursor::after {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--cr-primary);
+  content: '';
+  animation: cr-blink 1s step-end infinite;
+}
+
+@keyframes cr-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Element Plus 使用同一蓝绿色主题，保留错误、警告等语义颜色。 */
+:root {
+ --el-color-primary: #2b7a78;
+ --el-color-primary-light-3: #559593;
+ --el-color-primary-light-5: #95bcbb;
+ --el-color-primary-light-7: #c0d9d8;
+ --el-color-primary-light-8: #d5e7e6;
+ --el-color-primary-light-9: #eaf3f2;
+ --el-color-primary-dark-2: #226260;
+ --el-text-color-secondary: #5a6b7b;
+}
+button, a, [tabindex] { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--cr-primary); outline-offset: 3px; }
+.answer-body { font-size: 15px; line-height: 1.85; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }

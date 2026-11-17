@@ -1,0 +1,167 @@
+﻿"""生成评测集 v2（50 题）。
+
+做法
+----
+问题由人（我）读块内容后撰写，脚本只负责把「问题」与「金标准块」按内容前缀配对，
+避免手抄 32 位 UUID 出错。若某条前缀匹配不唯一或匹配不到，脚本会报错并要求修正，
+不会静默丢弃——评测集里少一条比错一条更麻烦。
+
+语料：118 篇 / 4,206 块（2026-11-14 扩容后）。
+"""
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+POOL = Path(r"D:\AI\RAG_project\data\eval\_chunk_pool.json")
+OUT = Path(r"D:\AI\RAG_project\data\eval\review_set_v2.json")
+
+# (内容前缀, 问题, 是否关系型)
+SPECS: list[tuple[str, str, bool]] = [
+    # —— 指南/共识：肝转移指南 2023 ——
+    ("1.RAS 检测：推荐结直肠癌肝转移的患者均进", "结直肠癌肝转移患者做 RAS 检测，具体要查哪些外显子？证据等级和推荐级别是什么？", False),
+    ("癌，即肿瘤下缘距肛缘>12 cm，其新辅助治疗参照", "局部进展期直肠癌在什么情况下建议做术前联合放化疗？TNT 是怎么安排的？", False),
+    ("手术治疗后应进行3~6 个月的辅助化疗", "无转移结直肠癌根治术后辅助化疗要做多久？可以选哪些方案？", False),
+    # —— 指南/共识：机器人 NOSES 共识 2025 ——
+    ("本部分内容包括R-CRC-NOSES（Ⅰ、Ⅱ、Ⅲ、", "机器人 NOSES Ⅰ 式对肿瘤下缘距齿状线、浸润深度和最大横径分别有什么要求？", False),
+    ("（C）肿瘤未侵及内外括约 肌；（D）经局部切除后需要补充根治切除", "机器人 NOSES Ⅱ 式的禁忌证里，哪些情况不适合经肛门拉出标本？", False),
+    ("（C）肿瘤最大 禁忌证：（A）肿瘤体积过大，无法经肛门拉 出者", "机器人 NOSES Ⅲ 式适合什么位置的直肠癌？肿瘤最大横径上限是多少？", False),
+    # —— 指南/共识：诊疗规范 2023 ——
+    ("和随访时，必须检测外周血CEA、CA19‑9", "结肠镜检查报告必须包含哪些内容？哪些情况属于检查禁忌？", False),
+    ("③存在MRI 检查禁忌证患者，推荐CT 增强扫 描判断直肠癌cTNM 分期", "有 MRI 禁忌的直肠癌患者用 CT 增强判断分期，哪些指标判断价值有限？", False),
+    ("推荐盆腔MRI评价新辅", "CT 不能确诊的直肠癌局部复发或肝转移，下一步推荐什么影像检查？", False),
+    # —— 综述：吻合口漏 ——
+    ("已有的研究结果显示：直肠癌前切除术后发生 吻合口漏的危险因素包括高龄", "直肠癌前切除术后吻合口漏的危险因素有哪些？其中哪些是可以干预的？", False),
+    ("但是对于接受新辅助治疗的患者，吻合口加固 缝合和常规吻合的术后吻合口漏发生情况比较", "接受新辅助治疗的患者做吻合口加固缝合，能否降低吻合口漏发生率？", False),
+    # —— 指南：内镜诊治共识 2023 ——
+    ("陈述陈述15：发现并切除癌前病变可以有效阻断结直肠", "发现并切除癌前病变对结直肠癌防控有什么意义？推荐强度和共识水平如何？", False),
+    ("腺瘤性息肉是结直肠癌最主 要的癌前病变", "息肉长径与进展期腺瘤的可能性有什么关系？不同大小段的比例大概是多少？", False),
+    ("超声内镜可以 准确判断病变浸润深度", "SM1 期癌发生淋巴结转移的比例大概多少？术前靠什么判断？", False),
+    # —— 指南：直肠癌 cCR 共识 ——
+    ("推荐意见3：对于cCR 的评估时机，初次评估", "新辅助治疗后 cCR 的首次评估应该在什么时间窗？长程和短程放疗有区别吗？", False),
+    ("在一项荷兰结直肠外科对1 593 例 患者的数据统计分析显示", "荷兰 1593 例的数据显示，nCRT 治疗后 pCR 在什么时间达到峰值？", False),
+    ("推荐意见4：对于新辅助治疗后的直肠癌患 者，初始评估应优先采用直肠增强磁共振成像", "新辅助治疗后疗效初始评估优先用什么检查？还需结合哪些手段动态监测？", False),
+    # —— 指南：自主神经保护共识 ——
+    ("通过组织学研究，发现直肠与骶 骨间存在三层筋膜结构", "直肠与骶骨之间的三层筋膜结构分别是什么？腹下神经走行在哪一层？", False),
+    ("每支主干神经和分支都有伴行的血管", "TME 联合自主神经保留（TME+ANP）的适应证有哪些前提条件？", False),
+    ("直肠周围的筋膜分布，以直肠固有筋膜为核", "腹下神经前筋膜与 Denonvilliers 筋膜在解剖上是什么关系？", False),
+    # —— 指南：肠镜 AI 共识 ——
+    ("陈述陈述2：对于接受肠镜检查的患者对于接受肠镜检查的患者", "肠镜 AI 辅助评估肠道准备的推荐强度和证据质量是什么？准备不充分有什么后果？", False),
+    ("短，从而增加成本和并发症风险", "肠镜 AI 用 U-NET 做了哪个任务？用了多少图像和视频？", False),
+    ("共识水平： 陈述陈述4：在退镜过程中", "AI 辅助计算退镜时间的推荐强度与共识水平是多少？", False),
+    # —— 指南：老年围术期营养共识 ——
+    ("老年外科患者存在营养风险或营养不良，与术 后不良临床结局相关", "老年外科患者 NRS 2002 达到多少分提示需要术前营养支持？高营养风险怎么界定？", False),
+    ("静息能量消耗反映人体能量需求", "老年患者的静息能量消耗一般按多少估算？", False),
+    ("口服营养补充可明确增加老年住院患者的能 量摄入和体质量", "口服营养补充每天至少多少千卡才有助改善结局？什么时候开始？", False),
+    # —— 指南：早诊早治共识 ——
+    ("CRC 的筛查应根据各地区CRC 疾病负担", "FIT 相比愈创木脂粪隐血试验有什么优势？", False),
+    ("高 质量结肠镜检查的标准包括", "结肠镜肠道准备合格用波士顿量表怎么判？推荐怎样的给药方式？", False),
+    ("开展的大肠癌早筛工作提出了中国的《大肠癌早诊", "我国大肠癌早诊早治项目把筛查对象定在哪个年龄段？依据是什么？", False),
+    # —— 综述：大语言模型 ——
+    ("通用模型虽掌握医学基础知识，但缺乏重症医 学特有的时序推理", "重症医学大模型的“两阶段训练法”第一阶段做什么？", False),
+    ("在此基 础上通过重症语料库进行监督微调", "重症大模型怎么用强化学习构建奖励模型？评分看哪些维度？", False),
+    ("在应用阶段，完整和高质量的重症患者信息是", "重症患者数据有哪些特征，使大模型应用变困难？", False),
+    # —— 指南：侧方淋巴结共识 ——
+    ("影像学检查是目前主要的术前诊断手段", "高分辨率 MRI 诊断直肠癌侧方淋巴结转移的敏感度和特异度是多少？", False),
+    ("（短径）是诊断侧方淋巴结转移的最主要参数", "侧方淋巴结短径 ≥7 mm 作为独立危险因素，其阳性/阴性预测值是多少？", False),
+    ("外，MRI 信号混杂和形态不规则", "用 MRI 恶性形态特征判断侧方转移，AUC 是多少？可疑转移比例多高？", False),
+    # —— 综述：单孔+1 腹腔镜 ——
+    ("SILS 及SILS+1 的发展与相应平台装置的研发", "早期单孔手术平台装置有哪些？能同时进入几个器械？", False),
+    ("1.安全性、有效性和肿瘤学疗效。SILS+1 用于 结直肠癌治疗时", "SILS+1 与常规腹腔镜在安全性上的争议点是什么？韩国团队比较了什么？", False),
+    ("8±30.4）min 比（116.6±36.6）min", "SILS+1 与常规腹腔镜的手术时间和 3 年无病生存率有何差异？", False),
+    # —— 指南：腹膜转移共识 ——
+    ("结直肠癌腹膜转移需结合病史、临床表现、影 像学、肿瘤标志物和内镜进行诊断", "结直肠癌腹膜转移的典型症状是什么？可疑患者怎么确诊？", False),
+    ("网膜饼或大网 膜多发条索状或结节", "腹膜转移在 CT 上有哪些直接与间接征象？CT-PCI 用来做什么？", False),
+    ("（证据质量：A；推荐级 血清肿瘤标志物检测对结直肠癌腹膜转移的", "腹膜转移用哪些肿瘤标志物联合检测能提高敏感性？", False),
+    # —— 综述：DeepSeek 医疗 ——
+    ("LLM 应用设计架构以混合算力为支撑进行部 署", "医疗大模型部署架构用什么基座模型？兼容哪些算力硬件？", False),
+    ("上层应用 场景整合多元化智能体（Agent）矩阵", "DeepSeek 医疗应用的上层是怎么组织的？权限如何控制？", False),
+    ("训练推理管理一体化系统展示了医疗大模型 全生命周期技术体系", "“流式模型孵化”要解决什么问题？医学抽样标注模块做什么？", False),
+    # —— 综述：免疫营养 ——
+    ("ω‑3 PUFAs组患者术后并发症发生率（7%）", "补充 ω-3 PUFAs 对术后并发症发生率和首次通气排便时间有什么影响？", False),
+    ("刺激生长激素分 泌，代谢为多胺", "精氨酸促进伤口愈合的机制是什么？", False),
+    ("精氨酸可因其浓度不同而产生不同效应", "精氨酸为什么不能无差别使用？临床上要注意什么？", False),
+    # —— 综述：护理 CDSS ——
+    ("1.护理CDSS的概念：CDSS是指可以对临床决策提供一 定支持的计算机系统", "护理 CDSS 的定义是什么？最初的设计目的是什么？", False),
+    ("1.辅助CDSS开发：护理CDSS的构建核心在于构建护理 决策知识库", "构建护理决策知识库时，为什么要做术语标准化？", False),
+    # —— 英文：关系型/比较型（用于检验图谱与融合） ——
+    ("CAPEOX, this chemotherapy combination contains", "这份指南里 MSI-H/dMMR 且未用过免疫检查点抑制剂的患者，一线推荐什么方案？", True),
+    ("Grade I recommendations Stratifications MSI-H/dMMR", "该指南对 MSI-H/dMMR 一线免疫治疗与 FOLFIRI±靶向治疗是怎么分层推荐的？", True),
+    ("Finally, we employ a deterministic, algorithmic-level strategy optimizer", "自校正 Agentic GraphRAG 如何优化检索策略？这样做的目的是什么？", True),
+    ("1 4.0 4.1 Standard RAG 4.3 4.2 4.3 Graph RAG", "该框架与标准 RAG、基础 Graph RAG 在安全评分上的对比结果如何？", True),
+    ("Previous studies have reported that machine learning-based diagnostic models", "机器学习诊断模型在直肠癌淋巴结转移诊断上，相比传统影像方法效率如何？", True),
+    ("3.2 Logistic prediction model of lateral lymph node metastasis", "直肠癌侧方淋巴结转移的逻辑回归模型确定了哪三个预测因素？", True),
+    ("Therefore, this study aims to focus on patients undergoing laparo scopic radical resection", "该研究针对腹腔镜结直肠癌根治术患者，主要想弄清术中低体温与什么的关系？", True),
+    ("In Kaplan– Meier subgroup analyses, apparent DMFS differences", "低危患者接受辅助化疗与不接受的 DMFS 差异如何？作者怎么评价该发现的可靠性？", True),
+]
+
+
+def norm(s: str) -> str:
+    return " ".join(s.split())
+
+
+def main() -> int:
+    pool = json.loads(POOL.read_text(encoding="utf-8"))
+    by_prefix = []
+    for item in pool:
+        by_prefix.append((norm(item["text"]), item))
+
+    items, unmatched, dup = [], [], []
+    for prefix, question, relational in SPECS:
+        p = norm(prefix)
+        hits = [it for txt, it in by_prefix if txt.startswith(p)]
+        if len(hits) != 1:
+            (dup if hits else unmatched).append((prefix, len(hits)))
+            continue
+        it = hits[0]
+        items.append({
+            "qid": f"V2-{len(items)+1:03d}",
+            "question": question,
+            "gold_chunk_ids": [it["id"]],
+            "source_document_title": it["title"],
+            "evidence_level": it["level"],
+            "language": "zh" if it["lang"].startswith("chi") else "en",
+            "relational": relational,
+            "from_new_document": bool(it["new_today"]),
+        })
+
+    if unmatched or dup:
+        print(f"  ✗ 前缀未匹配 {len(unmatched)} 条、匹配不唯一 {len(dup)} 条，请修正后重跑")
+        for x in unmatched[:10]:
+            print("    未匹配:", x)
+        for x in dup[:10]:
+            print("    不唯一:", x)
+        return 1
+
+    from scripts.prepare_review_set import corpus_snapshot
+    from app.db.session import session_scope
+
+    with session_scope() as db:
+        corpus = corpus_snapshot(db)
+
+    doc = {
+        "dataset": "review_set_v2",
+        "version": "2026-11-14",
+        "corpus": corpus,
+        "items": items,
+        "limitations": [
+            "题目由开发者阅读原文后撰写，不是独立临床留出集",
+            "金标准为单个文本块，未标注其他等价正确答案",
+            "语料在构建前刚由 109 篇扩容到 118 篇，指纹为 118 篇快照",
+            "关系型题目仅 8 条，统计效力有限",
+        ],
+    }
+    OUT.write_text(json.dumps(doc, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    zh = sum(1 for i in items if i["language"] == "zh")
+    print(f"  ✓ 已生成 {len(items)} 题 → {OUT}")
+    print(f"    中文 {zh} / 英文 {len(items)-zh} | 关系型 {sum(1 for i in items if i['relational'])} | 来自新文献 {sum(1 for i in items if i['from_new_document'])}")
+    print(f"    语料快照: {corpus.get('documents')} 篇 / {corpus.get('chunks')} 块")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

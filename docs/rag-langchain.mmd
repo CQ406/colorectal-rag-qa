@@ -1,0 +1,18 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	request_state_input([request_state_input]):::first
+	request_state(request_state)
+	Branch_1(Branch)
+	Branch_2(Branch)
+	BranchOutput([BranchOutput]):::last
+	request_state_input --> request_state;
+	request_state --> Branch_1;
+	Branch_2 --> BranchOutput;
+	Branch_1 --> Branch_2;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

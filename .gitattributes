@@ -1,0 +1,27 @@
+# 统一换行：脚本/源码用 LF，Windows 批处理用 CRLF
+* text=auto
+*.py    text eol=lf
+*.ts    text eol=lf
+*.js    text eol=lf
+*.vue   text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.sql   text eol=lf
+*.sh    text eol=lf
+*.ps1   text eol=crlf
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# 二进制：不要做换行转换，也不要尝试文本 diff
+*.pdf   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.bmp   binary
+*.gif   binary
+*.docx  binary
+*.xlsx  binary
+*.pptx  binary
